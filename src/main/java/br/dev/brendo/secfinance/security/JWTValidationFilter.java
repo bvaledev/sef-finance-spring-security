@@ -9,11 +9,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 public class JWTValidationFilter extends BasicAuthenticationFilter {
 
@@ -51,7 +55,12 @@ public class JWTValidationFilter extends BasicAuthenticationFilter {
                 .build().verify(token);
 
         String userEmail = decodedJWT.getSubject();
+        List<String> rolesClaim = decodedJWT.getClaim("roles").asList(String.class);
 
-        return new UsernamePasswordAuthenticationToken(userEmail, null, new ArrayList<>());
+        Collection<GrantedAuthority> grantedAuthorities = new ArrayList<>();
+        for (String role : rolesClaim) {
+            grantedAuthorities.add(new SimpleGrantedAuthority(role));
+        }
+        return new UsernamePasswordAuthenticationToken(userEmail, null, grantedAuthorities);
     }
 }
