@@ -26,9 +26,10 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception{
         httpSecurity.csrf().disable()
                 .authorizeHttpRequests(authorize -> {
-                    authorize.requestMatchers("/users/**").permitAll();
+                    authorize.requestMatchers(HttpMethod.GET,"/users").hasAnyRole("ADMIN");
+                    authorize.requestMatchers(HttpMethod.POST,"/users").permitAll();
                     authorize.requestMatchers(HttpMethod.POST, "/auth/**").permitAll();
-                    authorize.anyRequest().permitAll();
+                    authorize.anyRequest().authenticated();
                 })
                 .addFilter(new JWTValidationFilter(configuration.getAuthenticationManager()))
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
