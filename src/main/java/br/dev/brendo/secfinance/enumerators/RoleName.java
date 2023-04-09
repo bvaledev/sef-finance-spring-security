@@ -1,4 +1,4 @@
-package br.dev.brendo.secfinance.entity;
+package br.dev.brendo.secfinance.enumerators;
 
 public enum RoleName {
     ROLE_ADMIN,
