@@ -1,5 +1,6 @@
 package br.dev.brendo.secfinance.entity;
 
+import br.dev.brendo.secfinance.enumerators.RoleName;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
@@ -24,9 +25,5 @@ public class RoleEntity implements GrantedAuthority {
     @Override
     public String getAuthority() {
         return this.authority.toString();
-    }
-
-    public String getNameAuthority() {
-        return this.name+ ":"+ this.authority.toString();
     }
 }
