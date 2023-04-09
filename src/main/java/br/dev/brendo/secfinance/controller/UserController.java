@@ -1,8 +1,9 @@
 package br.dev.brendo.secfinance.controller;
 
 import br.dev.brendo.secfinance.dto.CreateUserDTO;
+import br.dev.brendo.secfinance.dto.UserViewDTO;
 import br.dev.brendo.secfinance.entity.RoleEntity;
-import br.dev.brendo.secfinance.entity.RoleName;
+import br.dev.brendo.secfinance.enumerators.RoleName;
 import br.dev.brendo.secfinance.entity.UserEntity;
 import br.dev.brendo.secfinance.repository.RoleRepository;
 import br.dev.brendo.secfinance.repository.UserRepository;
@@ -20,6 +21,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.function.Function;
 
 @RestController
 @RequestMapping("/users")
@@ -33,14 +35,21 @@ public class UserController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN')")
-    public ResponseEntity<Page<UserEntity>> index(@PageableDefault(page = 0, size = 20, sort = "email", direction = Sort.Direction.ASC) Pageable pagination) {
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    public ResponseEntity<Page<UserViewDTO>> index(@PageableDefault(page = 0, size = 20, sort = "email", direction = Sort.Direction.ASC) Pageable pagination) {
         Page<UserEntity> userPaged = this.userRepository.findAll(pagination);
-        return ResponseEntity.ok(userPaged);
+        Function<UserEntity, UserViewDTO> func = new Function<UserEntity, UserViewDTO>() {
+            @Override
+            public UserViewDTO apply(UserEntity user) {
+                return new UserViewDTO(user);
+            }
+        };
+        Page<UserViewDTO> dtoPage = userPaged.map(func);
+        return ResponseEntity.ok(dtoPage);
     }
 
     @PostMapping
-    public ResponseEntity<UserEntity> create(@RequestBody @Valid CreateUserDTO userDTO, UriComponentsBuilder uriBuilder) throws Exception {
+    public ResponseEntity<UserViewDTO> create(@RequestBody @Valid CreateUserDTO userDTO, UriComponentsBuilder uriBuilder) throws Exception {
         Optional<UserEntity> userExists = userRepository.findByEmail(userDTO.email());
         if(userExists.isPresent()){
             throw new Exception("User already exists");
@@ -58,6 +67,6 @@ public class UserController {
 
         newUser = this.userRepository.save(newUser);
         URI uriPath = uriBuilder.path("/users/" + newUser.getUserId()).build().toUri();
-        return ResponseEntity.created(uriPath).body(newUser);
+        return ResponseEntity.created(uriPath).body(new UserViewDTO(newUser));
     }
 }
